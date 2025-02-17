@@ -149,10 +149,11 @@ export default function DocumentUpload() {
       `Are you sure you want to delete the plan of ${date} ?`
     );
     
-    if (!userConfirmed) 
+    if (!userConfirmed){ 
       setLoading(false);
       return;
-
+    }
+    
     try {
       const response = await fetch("/api/deletePlan", {
         method: "DELETE",
