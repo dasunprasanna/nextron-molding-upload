@@ -81,42 +81,45 @@ export default function DocumentUpload() {
   const handleFileUpload = async (e) => {
     e.preventDefault();
     if (!file) {
-      alert("Please select a file to upload.");
-      return;
+        alert("Please select a file to upload.");
+        return;
     }
-  
+
     setLoading(true);
     try {
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", file);
-      formDataUpload.append("date", formdata.date);
-  
-      const response = await fetch("/api/uploadExcel", {
-        method: "POST",
-        body: formDataUpload,
-        cache: "no-store",
-      });
-  
-      if (response.status === 409) {
-        //handleSubmitToastFailed(`Molding plan already exists for the selected date. If you need to change the plan, Please delete the ${formdata.date} plan`);
-        alert(`Molding plan already exists for the selected date. If you need to change the plan, Please delete the Molding Plan of ${formdata.date}.`);
-      } else if (response.ok) {
-        handleSubmitToast("Plan");
-        setFile(null);
-        setFormdata({ date: "" });
-        e.target.reset();
-        DocList();
-      } else {
-        handleSubmitToastFailed("Plan");
-        e.target.reset();
-      }
+        const formDataUpload = new FormData();
+        formDataUpload.append("file", file);
+        formDataUpload.append("date", formdata.date);
+
+        const response = await fetch("/api/uploadExcel", {
+            method: "POST",
+            body: formDataUpload,
+            cache: "no-store",
+        });
+
+        if (response.status === 409) {
+            const data = await response.json();
+            alert(`Molding plan already exists for the selected date. ${data.error}`);
+        } else if (response.ok) {
+            const data = await response.json();
+            handleSubmitToast("Plan");
+            setFile(null);
+            setFormdata({ date: "" });
+            e.target.reset();
+            DocList();
+        } else {
+            const data = await response.json();
+            handleSubmitToastFailed("Plan");
+            e.target.reset();
+        }
     } catch (error) {
-      alert("An error occurred during file upload.");
-      e.target.reset();
+        alert("An error occurred during file upload.");
+        console.error(error);
+        e.target.reset();
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   const DocList = async () => {
     try {
@@ -145,7 +148,10 @@ export default function DocumentUpload() {
     const userConfirmed = window.confirm(
       `Are you sure you want to delete the plan of ${date} ?`
     );
-    if (!userConfirmed) return;
+    
+    if (!userConfirmed) 
+      setLoading(false);
+      return;
 
     try {
       const response = await fetch("/api/deletePlan", {
